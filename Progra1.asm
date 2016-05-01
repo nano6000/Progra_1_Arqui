@@ -14,10 +14,19 @@ columna resb 4
 fila resb 4
 
 ;-------------control de jugadores-----------------
-jugador1 resw 5
-jugador2 resw 5
-jugador3 resw 5
-jugador4 resw 5
+jugador1 resw 10				;Nombre del jugador
+lenJ1 resb 1				;Largo del nombre del jugador
+jugador2 resw 10
+lenJ2 resb 1
+jugador3 resw 10
+lenJ3 resb 1
+jugador4 resw 10
+lenJ4 resb 1
+
+turno resb 1				;Control del turno
+cantJug resb 2				;Cantidad de jugadores en la partida, cuando el turno=(cantJug-1)
+							;turno=(turno+1)%cantJug
+jugMax resb 2
 
 section .data
 
@@ -60,17 +69,32 @@ lenLarge equ $-matrizLarge-67
 ;---------------------------------------------------------------------------------------------------------
 ;			Mensajes
 ;---------------------------------------------------------------------------------------------------------
-msj1 db 'Seleccione el tamano del tablero:',10,'1: Pequeno (2 jugadores, 6x6)',10,'2: Mediano (3 jugadores, 10x10)',10,'3: Grande (4 jugadores, 14x14)',10,'>'
-lenMsj1 equ $-msj1
+msjSeleccionTablero db 'Seleccione el tamano del tablero:',10,'1: Pequeno (2 jugadores, 6x6)',10,'2: Mediano (3 jugadores, 10x10)',10,'3: Grande (4 jugadores, 14x14)',10,'>'
+lenMsjSeleccionTablero equ $-msjSeleccionTablero
 
-msj2 db 'Indique la direccion de la linea a dibujar:',10,'1: Vertical',10,'2: Horizontal',10,'>'
-lenMsj2 equ $-msj2
+msjSeleccionDireccion db 'Indique la direccion de la linea a dibujar:',10,'1: Vertical',10,'2: Horizontal',10,'>'
+lenMsjSeleccionDireccion equ $-msjSeleccionDireccion
 
-msj3 db 'Linea vertical seleccionada! Digite - en el espacio de la fila si desea cambiar la direccion',10,'Ingrese primero la columna correspondiente en la que desea dibujar la linea (0~[n-1]), luego ingrese la fila correspondiente en la que desea dibujar la linea (1~[n-1]):',10,'>'
-lenMsj3 equ $-msj3
+msjLineaVertical db 'Linea vertical seleccionada! Digite - en el espacio de la fila si desea cambiar la direccion',10,'Ingrese primero la columna correspondiente en la que desea dibujar la linea (0~[n-1]), luego ingrese la fila correspondiente en la que desea dibujar la linea (1~[n-1]):',10,'>'
+lenMsjLineaVertical equ $-msjLineaVertical
 
-msj4 db 'Linea horizontal seleccionada! Digite - en el espacio de la fila si desea cambiar la direccion',10,'Ingrese primero la columna correspondiente en la que desea dibujar la linea (0~[n-2]), luego ingrese la fila correspondiente en la que desea dibujar la linea (0~[n-1]):',10,'>'
-lenMsj4 equ $-msj4
+msjLineaHorizontal db 'Linea horizontal seleccionada! Digite - en el espacio de la fila si desea cambiar la direccion',10,'Ingrese primero la columna correspondiente en la que desea dibujar la linea (0~[n-2]), luego ingrese la fila correspondiente en la que desea dibujar la linea (0~[n-1]):',10,'>'
+lenMsjLineaHorizontal equ $-msjLineaHorizontal
+
+msjCantidadJugadores db 'Ingrese la cantidad de jugadores',10,'>'
+lenMsjCantidadJugadores equ $-msjCantidadJugadores
+
+msjTurno db 'Siguiente turno!',10,'Turno de: '
+lenMsjTurno equ $-msjTurno
+
+msjIngresarNombres db 'Ingrese, en orden, los nombres de los jugadores (Max. 19 caracteres)',10,'>'
+lenMsjIngresarNombres equ $-msjIngresarNombres
+
+errorMayorCantJugadores db 'Error! Ha ingresado una cantidad de jugadores mayor a la permitida!',10
+lenErrorMayorCantJugadores equ $-errorMayorCantJugadores
+
+errorMenorCantJugadores db 'Error! Ha ingresado una cantidad de jugadores menor a la permitida!',10
+lenErrorMenorCantJugadores equ $-errorMenorCantJugadores
 
 section .text
 	global _start
@@ -78,8 +102,8 @@ section .text
 _start:
 seleccion_tablero:
 ;------------Imprime el msj de seleccion de tablero---------------------
-	mov edx,lenMsj1
-	mov ecx,msj1
+	mov edx,lenMsjSeleccionTablero
+	mov ecx,msjSeleccionTablero
 	mov ebx,1
 	mov eax,4
 	int 0x80
@@ -119,7 +143,9 @@ copiar_large:
 	sub ecx,67
 	mov word [lenTablero],cx
 	
-	jmp imprimir
+	mov byte [jugMax],0x34
+	
+	jmp cantidad_jugadores
 copiar_medium:
 	xor ah,ah
 	mov al,byte [matrizMedium+ecx]			;copia X posicion del tablero en la parte baja del registro ax
@@ -134,10 +160,11 @@ copiar_medium:
 	mov [despVertical_t],al					;Copiamos el desplazamiento vertical del tablero seleccionado
 	mov byte [largoAnchoMax],0xA			;Copiamos el largo y ancho maximo del tablero seleccionado
 	sub ecx,47
-	;inc ecx
 	mov word [lenTablero],cx
 	
-	jmp imprimir
+	mov byte [jugMax],0x33
+	
+	jmp cantidad_jugadores
 copiar_small:
 	xor ah,ah
 	mov al,byte [matrizSmall+ecx]			;copia X posicion del tablero en la parte baja del registro ax
@@ -152,24 +179,33 @@ copiar_small:
 	mov [despVertical_t],al					;Copiamos el desplazamiento vertical del tablero seleccionado
 	mov byte [largoAnchoMax],0x6					;Copiamos el largo y ancho maximo del tablero seleccionado
 	sub ecx,27
-	mov [lenTablero],ecx
+	mov word [lenTablero],cx	
+	
+	mov byte [jugMax],0x32
+	
+	jmp cantidad_jugadores
 
 ;---------------------Imprime el tablero--------------------------------
 imprimir:
+	xor edx,edx
+	xor ecx,ecx
+	xor ebx,ebx
+	xor eax,eax
+	
 	mov word dx,[lenTablero]
-	;inc dx
 	mov ecx,tablero
 	add cx,word [despHorizontal_t]				;Desplazamiento para ocultar la primera fila nula
 	mov ebx,1
 	mov eax,4
 	int 0x80
 	
-	mov ax,[tablero]
-	;jmp salir
-	
+	jmp siguiente_turno
+;-----------------------------------------------------------------------
+;		Pregunta al usuario que tipo de linea desea dibujar
+;-----------------------------------------------------------------------
 dibujo_linea:
-	mov edx,lenMsj2
-	mov ecx,msj2
+	mov edx,lenMsjSeleccionDireccion
+	mov ecx,msjSeleccionDireccion
 	mov ebx,1
 	mov eax,4
 	int 0x80
@@ -186,9 +222,12 @@ dibujo_linea:
 	cmp al,0x31
 	jne dibujo_linea
 
+;-----------------------------------------------------------------------
+;			Dibuja una linea vertical en el tablero
+;-----------------------------------------------------------------------
 dibujar_vertical:
-	mov edx,lenMsj3
-	mov ecx,msj3
+	mov edx,lenMsjLineaVertical
+	mov ecx,msjLineaVertical
 	mov ebx,1
 	mov eax,4
 	int 0x80
@@ -261,7 +300,7 @@ continua_vertical_f:
 	xor ebx,ebx
 	xor eax,eax
 	xor ecx,ecx
-	
+prueba:
 	mov cl,5						;Mueve un 5 para calcular el desplazamieto horizontal
 	mov al,[columna]				;Mueve a la parte baja del registro ax el valor introducido por el usuario
 	xor al,0x30						;Convierte el valor introducido por el usuario a ascii
@@ -282,9 +321,12 @@ continua_vertical_f:
 									;mas el desplazamiento calculado
 	jmp imprimir
 	
+;-----------------------------------------------------------------------
+;			Dibuja una linea horizontal en el tablero
+;-----------------------------------------------------------------------
 dibujar_horizontal:
-	mov edx,lenMsj4
-	mov ecx,msj4
+	mov edx,lenMsjLineaHorizontal
+	mov ecx,msjLineaHorizontal
 	mov ebx,1
 	mov eax,4
 	int 0x80
@@ -354,8 +396,6 @@ continua_horizontal_f:
 	jb dibujar_horizontal
 	
 	;------------Calcula el desplazamiento---------------
-pausa:
-	;mov eax,tablero
 	xor ebx,ebx
 	xor eax,eax
 	xor ecx,ecx
@@ -377,11 +417,144 @@ pausa:
 	xor eax,eax
 	xor ecx,ecx
 	mov eax,tablero					;Copia la direccion del tablero en el registro
-	;add ax,word [despHorizontal_t]
 	mov ecx,[horizontal]				;Mueve el caracter | al registro
 	mov [eax+ebx],ecx				;Escribe el caracter en la posicion de memoria del tablero
 									;mas el desplazamiento calculado
 	jmp imprimir
+	
+;-------------El usuario ingresa la cantidad de jugadores---------------
+;-------------------que jugaran esta partida----------------------------
+cantidad_jugadores:
+	mov edx,lenMsjCantidadJugadores
+	mov ecx,msjCantidadJugadores
+	mov ebx,1
+	mov eax,4
+	int 0x80
+	
+	mov eax,3			;read
+	mov ebx,0			;stdin
+	mov ecx,cantJug		;direccion de buffer
+	mov edx,2			;cantidad de bytes a leer
+	int 0x80
+	
+	mov al,[cantJug]
+	mov bl,[jugMax]
+	cmp al,bl							;Compara si el usuario ingreso una cantidad mayor
+	ja error_mayor_cant
+	
+	cmp al,0x32							;Compara si el usuario ingreso una cantidad menor
+	jb error_menor_cant
+	
+	mov byte [turno],0x00
+	
+	mov edx,lenMsjIngresarNombres
+	mov ecx,msjIngresarNombres
+	mov ebx,1
+	mov eax,4
+	int 0x80
+	
+	jmp ingresar_nombres
+	
+;------------------Calculo el siguiente turno---------------------------
+siguiente_turno:
+	xor ecx,ecx
+	xor eax,eax
+	mov al,[turno]
+	inc al										;aumento el turno
+	mov cl,[cantJug]
+	xor cl,0x30
+	div cl
+	mov [turno],ah								;turno%cantJugadores = turno
+	
+	mov edx,lenMsjTurno
+	mov ecx,msjTurno
+	mov ebx,1
+	mov eax,4
+	int 0x80
+	
+	;calcula el desplazamiento para escribir el largo de los nombres
+	xor eax,eax
+	mov al,[turno]
+	xor ebx,ebx
+	mov ebx,20
+
+	;direccion del largo del msj, calcula el dezplazamiento para guardar el largo del nombre el el lugar correcto
+	mul bl								;turno*20+jugador1 = posicion en memoria del largo del nombre del jugador
+	add al,20
+	mov dl,byte [jugador1+eax]			;direccion de buffer. Salto 20 bytes del nombre del primer jugador
+	
+	;direccion del msj
+	xor eax,eax
+	mov al,[turno]
+	xor ebx,ebx
+	mov ebx,21
+	
+	mul bl								;calcula el dezplazamiento para guardar el nombre el el lugar correcto
+	mov ecx,jugador1					;direccion de buffer
+	add ecx,eax
+	
+	mov ebx,1
+	mov eax,4
+	int 0x80
+	
+	jmp dibujo_linea
+	
+	
+	
+;----------------------Ingresa los nombres de los jugadores-------------
+ingresar_nombres:
+	xor eax,eax
+	mov al,[turno]
+	mov bl,[cantJug]
+	xor bl,0x30
+	cmp al,bl
+	je imprimir							;Si son iguales ya se ingresaron todos los nombres
+	
+	xor ebx,ebx
+	mov ebx,21
+	
+	mul bl								;calcula el dezplazamiento para guardar el nombre el el lugar correcto
+	mov ecx,jugador1					;direccion de buffer
+	add ecx,eax							;turno*21+jugador1 = posicion en memoria del nombre del jugador
+	mov eax,3							;read
+	mov ebx,0							;stdin
+	mov edx,20							;cantidad de bytes a leer
+	int 0x80
+	
+	;calcula el desplazamiento para escribir el largo de los nombres
+	mov ecx,eax
+	xor eax,eax
+	mov al,[turno]
+	
+	xor ebx,ebx
+	mov ebx,20
+	
+	mul bl								;calcula el dezplazamiento para guardar el largo del nombre el el lugar correcto
+	mov edx,jugador1					;direccion de buffer
+	add edx,eax							;turno*20+jugador1 = posicion en memoria del largo del nombre del jugador
+	add edx,20							;Salto 20 bytes del nombre del primer jugador
+	mov byte [edx],cl
+	
+	inc byte [turno]
+	jmp ingresar_nombres
+	
+error_mayor_cant:
+	mov edx,lenErrorMayorCantJugadores
+	mov ecx,errorMayorCantJugadores
+	mov ebx,1
+	mov eax,4
+	int 0x80
+	
+	jmp cantidad_jugadores
+	
+error_menor_cant:
+	mov edx,lenErrorMenorCantJugadores
+	mov ecx,errorMenorCantJugadores
+	mov ebx,1
+	mov eax,4
+	int 0x80
+	
+	jmp cantidad_jugadores
 	
 salir:
 	mov ebx,0
