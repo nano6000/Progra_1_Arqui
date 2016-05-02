@@ -199,7 +199,7 @@ imprimir:
 	mov eax,4
 	int 0x80
 	
-	jmp siguiente_turno
+	jmp buscar_cuadro
 ;-----------------------------------------------------------------------
 ;		Pregunta al usuario que tipo de linea desea dibujar
 ;-----------------------------------------------------------------------
@@ -300,7 +300,7 @@ continua_vertical_f:
 	xor ebx,ebx
 	xor eax,eax
 	xor ecx,ecx
-prueba:
+	
 	mov cl,5						;Mueve un 5 para calcular el desplazamieto horizontal
 	mov al,[columna]				;Mueve a la parte baja del registro ax el valor introducido por el usuario
 	xor al,0x30						;Convierte el valor introducido por el usuario a ascii
@@ -555,7 +555,87 @@ error_menor_cant:
 	int 0x80
 	
 	jmp cantidad_jugadores
+
+;-----------------------------------------------------------------------
+;------------------Verifica si se formo un cuadrado---------------------
+;-----------------------------------------------------------------------
+buscar_cuadro:
+	xor ecx,ecx
+	mov byte cl,[direccion]
+	cmp cl,0x31							;1=vertical
+	je verif_posColumna
 	
+	;Verifica en que lugar del tablero esta la columna
+verif_posColumna:
+	xor eax,eax
+	xor ebx,ebx
+	mov byte al,[largoAnchoMax]
+	dec al
+	mov byte bl,[columna]
+	cmp bl,0x30
+	;je columna_izquierda
+	cmp bl,al
+	;je columna_derecha
+	
+	;El usuario acaba de ingresar una linea vertical en el centro (no en
+	;los bordes) del tablero
+columna_centro:	
+	xor ebx,ebx
+	xor eax,eax
+	xor ecx,ecx
+pausa4:	
+	mov cl,5						;Mueve un 5 para calcular el desplazamieto horizontal
+	mov byte al,[columna]				;Mueve a la parte baja del registro ax el valor introducido por el usuario
+	xor al,0x30						;Convierte el valor introducido por el usuario a ascii
+	mul cl							;Multiplica el valor introducido por 5
+	mov ebx,eax						;Guarda el valor obtenido en el ebx	
+	
+	xor eax,eax
+	mov al,[fila]					;Mueve a la parte baja del registro ax el valor introducido por el usuario
+	xor al,0x30						;Convierte el valor introducido por el usuario a ascii
+	mul byte [despVertical_t]		;Multiplica el valor introducido por el desplazamiento correspondiente
+pausa1:	
+	add ebx,eax						;Suma el desplazamiento vertical y el horizontal para obtener el desplazamiento total
+	xor eax,eax
+	mov eax,tablero					;Copia la direccion del tablero en el registro
+	add eax,ebx				;eax=direccion de la linea vertical
+	
+	sub eax,0x05
+	xor edx,edx
+	mov byte dl,[eax]
+	cmp dl,'|'
+	jne siguiente_turno;columna_centro_derecha
+pausa2:
+	;Revisa las lineas horizontales de arriba y abajo
+	add eax,0x05
+	add word ax,[despHorizontal_t]
+	dec eax
+	xor edx,edx
+	mov byte dl,[eax]
+	cmp dl,'-'
+	jne siguiente_turno;columna_centro_derecha
+	sub word ax,[despHorizontal_t]
+	sub word ax,[despHorizontal_t]
+	xor edx,edx
+	mov byte dl,[eax]
+	cmp dl,'-'
+	jne siguiente_turno;columna_centro_derecha
+	
+pausa3:
+	add word ax,[despHorizontal_t]
+	inc eax
+	sub eax,0x04
+	mov byte [eax],'/'
+	inc eax
+	xor ecx,ecx
+	mov byte cl, [jugador1]
+	mov byte [eax], cl
+	inc eax
+	mov word [eax],'//'
+	
+	jmp siguiente_turno
+	
+
 salir:
 	mov ebx,0
 	mov eax,1
