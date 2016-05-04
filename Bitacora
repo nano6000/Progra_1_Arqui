@@ -1,0 +1,123 @@
+Bitacora Progra1
+
+Lunes 25 de Abril
+	
+	1:40 pm:
+
+		Objetivo 1: Imprimir en la terminal, el tablero de 		juego, y simular el dibujo de las lineas.
+		Problemas: Problemas pequenos de sintaxis o de logica
+
+	9:00 pm:
+		
+		Objetivo 2: Imprimir tableros de diferentes tamano y de 	igual manera dibujar lineas en ella.
+		Problemas: Problemas pequenos de sintaxis o de logica
+	
+Martes 26 de Abril
+
+	10:00 pm
+		Objetivo 3: Permitir que el usuario escoga el tamano 
+	del tablero mediante la terminal.
+		Problemas: A la hora de comparar la entrada no lo
+	comparaba con el valor necesario.
+		Solucion: Utilizar el codigo ascii del la entrada que
+	usare como referencia (0x31=1, 0x32=2, 0x33=3).
+
+Miercoles 27 de Abril
+
+	3:25 pm
+		Objetivo 4: Utilizar una "variable" y utilizar un solo
+	bloque de ejecucion, a diferencia del inicio en el que
+	utilizaba 3 bloques practicamente igual para cada tamano de
+	tablero
+		Problemas: Reservaba un espacio en memoria del tamano
+	del tablero grande, pero reservaba menos espacio del que
+	ocupaba.
+
+	9:35 pm
+		Objetivo 5: Selecionar un tablero e imprimirlo en
+	pantalla, pero utilizando la "variable" anteriormente creada.
+		Problemas: Al utilizar el servicio de escritura,
+	calculaba mal los desplazamientos a la hora de imprimir el
+	tablero y movia la direccion de "variable" del largo en lugar
+	del contenido
+
+	12:20 am
+		Objetivo 6: Permitir la escritura de lineas verticales
+	en el tablero.
+		Problemas: -Errores en el calculo del desplazamiento
+		-Problemas en la lectura de las coordenadas.
+		Solucion: Revisar si el 2do byte es un valor numerico y 
+	si lo es, a ese numero le sumo 10. Y si el valor es igual a 10
+	(espacio) ignoro el 2do byte y utilizo unicamente el 1er byte.
+
+Viernes 29 de abril:
+	2:00 pm
+		Objetivo 7: Permitir la escritura de lineas horizontales
+	en el tablero.
+		Problemas: Problemas pequenos de sintaxis o de logica
+
+Sabado 30 de abril:
+	2:00 pm
+		Objetivo 8: Permitir el ingreso de jugadores
+	dependiendo del tamano del tablero.
+		Problemas: Problemas pequenos de sintaxis o de logica
+
+Domingo 1 de mayo:
+	10:00 am
+		Objetivo 9: Incorporar los turnos.
+		Problemas: Para no utilizar muchas estructuras de 
+	control, utilice desplazamiento para leer los nombres e
+	imprimirlos segun corresponda, pero al tratar de mover el dato
+	terminaba moviendo la direccion.
+		Solucion: Indicar el tamano en bytes de la operacion.
+
+Lunes 2 de mayo:
+	12:50 am
+		Objetivo 10: Analizar y decidir cuando un jugador ha
+	anotado un punto y anotarlo en el tablero (basico).
+		Problemas: Problemas pequenos de sintaxis o de logica
+
+	11:40 pm
+		Objetivo 11: Analizar y decidir cuando un jugador ha
+	anotado un punto y anotarlo en el tablero (bordes).
+		Problemas: Problemas pequenos de sintaxis o de logica.
+
+Martes 3 de mayo:
+	1:15 pm
+		Objetivo 12: Indicar en el tablero cual jugador anoto un
+	punto, escribiendo su inicial en el tablero
+		Problemas: Problemas pequenos de sintaxis o de logica
+	
+	2:10 pm
+		Objetivo 13: Llevar un puntaje interno, un contador 
+	interno de la cantidad de cuadros completados y finalizar la 
+	partida.
+		Problemas: Surgio un problema al ingresar una linea
+	horizontal en una columna mayor a la permitida.
+		Solucion: Disminuir una unidad al limite de la matriz
+
+	9:30 pm
+		Objetivo 14: Incorporar la posibilidad de revancha, la
+	notificacion del ganador de la partida.
+		Problemas: Problemas pequenos de sintaxis o de logica
+	
+	10:30 pm
+		Objetivo 15: Eliminar la posibilidad de escribir una
+	linea en donde previamente ya existia una linea.
+		Problemas: Problemas pequenos de sintaxis o de logica
+
+
+http://stackoverflow.com/questions/23468176/read-and-print-user-input-with-x86-assembly-gnu-linux
+
+
+
+
+
+
+
+
+
+
+
+
+
