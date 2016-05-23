@@ -311,7 +311,7 @@ continua_vertical_c:
 	dec bl
 	xor bl,0x30
 	cmp al,0x30						;verifica si el usuario quiere cambiar la direccion de la linea
-	je dibujo_linea	
+	;je dibujo_linea	
 	jb dibujar_vertical				;verifica si el usuario ingreso un caracter diferente a los numericos
 	;xor bl,0x30
 	cmp bl,al
