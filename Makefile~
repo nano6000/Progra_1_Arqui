@@ -32,3 +32,4 @@ $(NAME).o: $(NAME).asm
 	rm $(NAME).lst
 	rm $(NAME).o
 
+	# rm ~ comando para borrar un archivo

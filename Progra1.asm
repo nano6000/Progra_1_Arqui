@@ -109,7 +109,7 @@ lenMsjTurno equ $-msjTurno
 msjFin db 10,'Fin de la partida!',10,'El ganador es: '
 lenMsjFin equ $-msjFin
 
-msjRevancha db 10,'Desea jugar otra partida? (y/n)',10,>
+msjRevancha db 10,'Desea jugar otra partida? (y/n)',10,'>'
 lenMsjRevancha equ $-msjRevancha
 
 msjIngresarNombres db 10,'Ingrese, en orden, los nombres de los jugadores (Max. 19 caracteres)',10,'>'
